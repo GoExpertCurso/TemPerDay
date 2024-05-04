@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
+	"net/url"
 	"regexp"
 
 	"github.com/GoExpertCurso/TemPerDay/configs"
@@ -14,6 +16,7 @@ import (
 )
 
 func SearchZipCode(w http.ResponseWriter, r *http.Request) {
+	log.Default().Println("Server running")
 	vars := mux.Vars(r)
 	cep, ok := vars["cep"]
 	if !ok {
@@ -22,10 +25,10 @@ func SearchZipCode(w http.ResponseWriter, r *http.Request) {
 
 	response, err := http.Get("https://viacep.com.br/ws/" + cep + "/json/")
 	if err != nil {
-		fmt.Println("Error: ", err)
+		log.Panic("Error: ", err)
 	}
 
-	cepRegex := regexp.MustCompile(`^\d{5}-\d{3}$`)
+	cepRegex := regexp.MustCompile(`^\d{5}-?\d{3}$`)
 
 	body, err := io.ReadAll(response.Body)
 	if err != nil {
@@ -61,11 +64,19 @@ func SearchClimate(w http.ResponseWriter, r *http.Request, location string) {
 	if err != nil {
 		panic(err)
 	}
-	url := "http://api.weatherapi.com/v1/current.json?key=" + configs.APIKEY + "&q=" + location + "&aqi=yes"
 
-	response, err := http.Get(url)
+	params := url.Values{}
+	params.Add("q", location)
+	params.Add("aqi", "no")
+
+	encodedParams := params.Encode()
+
+	baseUrl := "https://api.weatherapi.com/v1/current.json?key=" + configs.APIKEY
+	requestUrl := baseUrl + "&" + encodedParams
+
+	response, err := http.Get(requestUrl)
 	if err != nil {
-		fmt.Println(err)
+		log.Fatalln("Error: ", err)
 	}
 
 	if response.StatusCode != 200 {
@@ -75,7 +86,7 @@ func SearchClimate(w http.ResponseWriter, r *http.Request, location string) {
 
 	weatherResponse, err := io.ReadAll(response.Body)
 	if err != nil {
-		fmt.Println("\nError reading response body:", err.Error())
+		log.Fatalln("\nError reading response body:", err.Error())
 	}
 
 	var weatherDto dto.Wheather
@@ -87,7 +98,7 @@ func SearchClimate(w http.ResponseWriter, r *http.Request, location string) {
 	temps.Temp_c = weatherDto.Current.TempC
 	jsonTemp, err := json.Marshal(temps)
 	if err != nil {
-		fmt.Println("\nError enconding json:", err.Error())
+		log.Fatalln("\nError enconding json:", err.Error())
 	}
 	w.Write([]byte(jsonTemp))
 }

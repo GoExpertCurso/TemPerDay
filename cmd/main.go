@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/GoExpertCurso/TemPerDay/configs"
@@ -14,7 +13,6 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(configs.WEB_SERVER_PORT)
 	r := mux.NewRouter()
 	r.HandleFunc("/{cep}", web.SearchZipCode)
 	http.ListenAndServe(":"+configs.WEB_SERVER_PORT, r)
