@@ -36,10 +36,10 @@ func SearchZipCode(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var erroDto dto.ZipCodeError
-	err = json.Unmarshal([]byte(body), &erroDto)
-	if err != nil {
+	_ = json.Unmarshal([]byte(body), &erroDto)
+	/* if err != nil {
 		fmt.Println("Error decoding response body:", err.Error())
-	}
+	} */
 
 	if erroDto.Erro {
 		w.WriteHeader(http.StatusNotFound)
